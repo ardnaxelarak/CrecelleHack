@@ -117,6 +117,8 @@ moveloop_preamble(boolean resuming)
        invent is fully populated and the in_moveloop flag has been set */
     if (iflags.perm_invent)
         update_inventory();
+
+    open_twitch();
 }
 
 staticfn void
@@ -578,6 +580,7 @@ moveloop_core(void)
 #ifdef MAIL
         ckmailstatus();
 #endif
+        check_twitch();
         rhack(0);
     }
     if (u.utotype)       /* change dungeon level */
@@ -881,6 +884,10 @@ newgame(void)
 void
 welcome(boolean new_game) /* false => restoring an old game */
 {
+#ifndef NO_SIGNAL
+    (void) signal(SIGPIPE, SIG_IGN);
+#endif
+
     char buf[BUFSZ];
     boolean currentgend = Upolyd ? u.mfemale : flags.female;
 
