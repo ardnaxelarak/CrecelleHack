@@ -2204,9 +2204,9 @@ potionhit(struct monst *mon, struct obj *obj, int how)
         }
         if (rn2(5) && mon->mhp > 1 && !hit_saddle)
             mon->mhp--;
+        mon->mdripping = 1;
+        mon->mdriptype = (obj->otyp == POT_BLOOD) ? (-1 * obj->corpsenm) : obj->otyp;
     }
-    mon->mdripping = 1;
-    mon->mdriptype = (obj->otyp == POT_BLOOD) ? (-1 * obj->corpsenm) : obj->otyp;
 
     /* oil doesn't instantly evaporate; Neither does a saddle hit */
     #if 0
@@ -2272,8 +2272,8 @@ potionhit(struct monst *mon, struct obj *obj, int how)
     }
 
     /* potions splatter */
-    potion_splatter(mon->mx, mon->my, obj->otyp, obj->corpsenm);
-    potion_fumigate(mon->mx, mon->my, obj);
+    potion_splatter(tx, ty, obj->otyp, obj->corpsenm);
+    potion_fumigate(tx, ty, obj);
     if (obj->dknown && cansee(tx, ty))
         trycall(obj);
 
