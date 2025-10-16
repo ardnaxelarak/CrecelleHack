@@ -1813,7 +1813,7 @@ coateffects(coordxy x, coordxy y, struct monst *mon) {
             } else if (thick_skinned(mon->data)) {
                 pline("Shards of glass crunch under your %s.", makeplural(body_part(FOOT)));
             } else {
-                if (u.uhp > 1) u.uhp--;
+                if (u.uhp > 1) losehp(1, "stepping on broken glass", KILLED_BY);
                 Your("%s are cut by shards of glass!", makeplural(body_part(FOOT)));
                 add_coating(x, y, COAT_BLOOD, gy.youmonst.mnum);
                 disp.botl = TRUE;
@@ -2642,6 +2642,12 @@ mixtype(struct obj *o1, struct obj *o2)
         o2typ = o1->otyp;
     }
 
+    /* Dipping anything in hazardous waste does not make it less hazardous.
+       The potion has probably already exploded before this point, however. */
+    if (o1->oclass == POTION_CLASS
+        && o2->otyp == POT_HAZARDOUS_WASTE)
+        return POT_HAZARDOUS_WASTE;
+
     switch (o1typ) {
     case POT_HEALING:
         if (o2typ == POT_SPEED)
@@ -2664,6 +2670,7 @@ mixtype(struct obj *o1, struct obj *o2)
         case POT_BLINDNESS:
         case POT_CONFUSION:
         case POT_BLOOD:
+        case POT_HAZARDOUS_WASTE:
             return POT_WATER;
         }
         break;

@@ -1274,7 +1274,14 @@ toss_up(struct obj *obj, boolean hitsroof)
         if (breaktest(obj)) {
             pline("%s hits the %s.", Doname2(obj), ceiling(u.ux, u.uy));
             breakmsg(obj, !Blind);
-            return breakobj(obj, u.ux, u.uy, TRUE, TRUE) ? FALSE : TRUE;
+            /* crackable armor will return True for breaktest() but will
+               usually return False for breakobj() */
+            if (!breakobj(obj, u.ux, u.uy, TRUE, TRUE)) {
+                hitfloor(obj, FALSE);
+                gt.thrownobj = 0;
+                return TRUE;
+            }
+            return FALSE;
         }
         action = "hits";
     } else {
@@ -2508,6 +2515,23 @@ breakobj(
     case EXPENSIVE_CAMERA:
         release_camera_demon(obj, x, y);
         break;
+    case BRASS_LANTERN:
+    case OIL_LAMP:
+    case MAGIC_LAMP:
+        if (obj->age > 9L || obj->otyp == MAGIC_LAMP) {
+            potion_splatter(x, y, POT_OIL, NON_PM);
+            if (obj->otyp != MAGIC_LAMP)
+                obj->age -= 9L;
+            if (hero_caused)
+                check_unpaid_usage(obj, FALSE);
+        }
+        if (obj->lamplit && obj->otyp != MAGIC_LAMP && !rn2(5)) {
+            if (cansee(x, y))
+                pline("It catches alight!");
+            create_bonfire(x, y, 1, rnd(4));
+            break;
+        }
+        return 0;
     case EGG:
         /* breaking your own eggs is bad luck */
         if (hero_caused && obj->spe && ismnum(obj->corpsenm))
@@ -2602,7 +2626,10 @@ breaktest(struct obj *obj)
     case ACID_VENOM:
     case BLINDING_VENOM:
     case LUMP_OF_ROYAL_JELLY:
-        return TRUE;
+    case OIL_LAMP:
+    case MAGIC_LAMP:
+    case BRASS_LANTERN:
+        return (obj->age > 9L);
     default:
         return FALSE;
     }
@@ -2618,6 +2645,7 @@ breakmsg(struct obj *obj, boolean in_view)
 
     to_pieces = "";
     switch (obj->oclass == POTION_CLASS ? POT_WATER :
+            obj->otyp == SNOWBALL ? obj->otyp :
             obj->oclass == GEM_CLASS ? WORTHLESS_VIOLET_GLASS : obj->otyp) {
     default: /* glass or crystal wand */
         if (obj->oclass != WAND_CLASS)
@@ -2655,6 +2683,9 @@ breakmsg(struct obj *obj, boolean in_view)
     case LUMP_OF_ROYAL_JELLY:
         pline("Splat!");
         break;
+    case SNOWBALL:
+        pline("Piff!");
+        break;
     case CREAM_PIE:
         if (in_view)
             pline("What a mess!");
@@ -2662,6 +2693,17 @@ breakmsg(struct obj *obj, boolean in_view)
     case ACID_VENOM:
     case BLINDING_VENOM:
         pline("Splash!");
+        break;
+    case OIL_LAMP:
+    case MAGIC_LAMP:
+    case BRASS_LANTERN:
+        if (obj->age > 9L) {
+            if (in_view) {
+                pline("Oil splatters everywhere!");
+                makeknown(POT_OIL);
+            }
+            else You_hear("a soft splash.");
+        }
         break;
     }
 }

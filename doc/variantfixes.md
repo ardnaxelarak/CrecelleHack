@@ -27,14 +27,19 @@
   Splice code I wrote.
 
 ## Monster Changes
-- Monsters can gain water walking and jumping.
+- Monsters can gain water walking, jumping.
   From SpliceHack, code ported directly from Evil and updated to 3.7.
-- Monsters can gain telepathy from items.
+- Monsters can gain telepathy from items, as well as bonus strength
+  and magical breathing.
 - Kobolds have been altered to skew closer to their appearance in early
   editions of D&D as well as anime like Record of Lodoss War. This is
   to say that their doglike features have been emphasized.
 - Water trolls have a generation probability of zero, allowing them
   to spawn in certain branches and biomes.
+- Dust vorticies regenerate health incredibly quickly when on sand
+  or dirt.
+- Fire, steam, and ice vorticies can absorb nearby coatings to rapidly heal
+  and occasionally level up.
 
 ## Item Changes
 - Implemented the weapon size system, extremely similar to the one that
@@ -46,6 +51,10 @@
     "medium" is omitted from sized item descriptions. Defaults to true.
 - Revert changes to scrolls of enchant weapon.
   - This change was undercooked and damaged game balance significantly.
+- Throwing or hitting monsters with lanterns or lamps can cause oil to
+  splatter everywhere. If the object is lit and nonmagical, the oil
+  can occasionally catch on fire.
+- Dipping a unicorn horn into hazardous waste will purify it.
 
 ## New Monsters
 - Killer Coins
@@ -67,12 +76,14 @@
 - Sand Golem
 
 ## New Objects
-- Upgrade Kit
+- Resizing Kit
   - As in dnethack, it can be used to resize objects. Unlike dnethack, it
     offers more granular control over object size. Objects can be one
     size larger, one size smaller, or the same size as the player's
     current form. In addition, any object where size is a factor can
     be resized.
+- Snowball
+  - Can be obtained through some creative application of commands.
 
 ## Pets
 - Allow the player to issue granular orders to their pets, directing

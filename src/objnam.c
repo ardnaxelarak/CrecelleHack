@@ -690,6 +690,7 @@ xname_flags(
     case WEAPON_CLASS:
         if (is_poisonable(obj) && obj->opoisoned)
             Strcpy(buf, "poisoned ");
+        add_boost_words(obj, buf);
         FALLTHROUGH;
         /*FALLTHRU*/
     case VENOM_CLASS:
@@ -857,7 +858,8 @@ xname_flags(
                     && (obj->blessed || obj->cursed)) {
                     Strcat(buf, obj->blessed ? "holy " : "unholy ");
                 }
-                if (typ == POT_BLOOD && known && ismnum(obj->corpsenm)) {
+                if (typ == POT_BLOOD && (obj->cknown || iflags.override_ID)
+                    && ismnum(obj->corpsenm)) {
                     Strcat(buf, mons[omndx].pmnames[NEUTRAL]);
                     Strcat(buf, " ");
                 }
@@ -1080,6 +1082,7 @@ minimal_xname(struct obj *obj)
     bareobj.otyp = otyp;
     bareobj.oclass = obj->oclass;
     bareobj.osize = obj->osize;
+    bareobj.booster = obj->booster;
     bareobj.dknown = (obj->dknown || iflags.override_ID) ? 1 : 0;
     /* suppress known except for amulets (needed for fakes and real A-of-Y) */
     bareobj.known = (obj->oclass == AMULET_CLASS)
@@ -1306,7 +1309,7 @@ size_matters(struct obj *obj)
     switch(obj->oclass) {
     case ARMOR_CLASS:
     case WEAPON_CLASS:
-        return TRUE;
+        return !Is_dragon_scales(obj);
     case TOOL_CLASS:
         return is_weptool(obj);
     default:
@@ -3542,11 +3545,12 @@ static const struct alt_spellings {
     { "HoOA", HELM_OF_OPPOSITE_ALIGNMENT },
     /* Easily confused objects */
     { "protection from illusions", RIN_PROTECTION_FROM_SHAPE_CHAN },
-    { "resizing kit", UPGRADE_KIT },
+    { "resizing kit", RESIZING_KIT },
     /* Objects renamed by variant */
     { "dented pot", YENDORIAN_BASCINET },
     { "small shield", ROUNDSHIELD },
     { "large shield", KITE_SHIELD },
+    { "upgrade kit", RESIZING_KIT },
     /* I would like to eliminate all mentions of this from the game entirely,
        but unfortunately this is muscle memory for a lot of strong players
        and will lead to wasted wishes. */
@@ -4080,7 +4084,6 @@ readobjnam_init(char *bp, struct _readobjnam_data *d)
     d->actualn = d->dn = d->un = 0;
     d->wetness = 0;
     d->gsize = 0;
-    d->osize = MZ_MEDIUM;
     d->zombify = FALSE;
     d->bp = d->origbp = bp;
     d->p = (char *) 0;
@@ -4088,6 +4091,12 @@ readobjnam_init(char *bp, struct _readobjnam_data *d)
     d->ftype = svc.context.current_fruit;
     (void) memset(d->globbuf, '\0', sizeof d->globbuf);
     (void) memset(d->fruitbuf, '\0', sizeof d->fruitbuf);
+
+    /* Size depends on an option set */
+    if (flags.player_sized_wishes)
+        d->osize = USIZE;
+    else
+        d->osize = MZ_MEDIUM;
 }
 
 /* return 1 if d->bp is empty or contains only various qualifiers like
@@ -4936,6 +4945,10 @@ readobjnam_postparse3(struct _readobjnam_data *d)
         d->contents = TIN_SPINACH;
         d->typ = TIN;
         return 2; /*goto typfnd;*/
+    }
+    if (d->oclass == POTION_CLASS && !strstri(d->bp, " blood")) {
+        d->typ = POT_BLOOD;
+        return 2;
     }
     /* Fruits must not mess up the ability to wish for real objects (since
      * you can leave a fruit in a bones file and it will be added to

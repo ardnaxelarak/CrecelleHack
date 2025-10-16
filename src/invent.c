@@ -2531,7 +2531,7 @@ set_cknown_lknown(struct obj *obj)
 {
     if (Is_container(obj) || obj->otyp == STATUE)
         obj->cknown = obj->lknown = 1;
-    else if (obj->otyp == TIN)
+    else if (obj->otyp == TIN || obj->otyp == POT_BLOOD)
         obj->cknown = 1;
     /* TODO? cknown might be extended to candy bar, where it would mean that
        wrapper's text was known which in turn indicates candy bar's content */
@@ -3178,7 +3178,7 @@ itemactions(struct obj *otmp)
         ia_addmenu(win, IA_APPLY_OBJ, 'a', "Use this tool to pick a lock");
     else if (otmp->otyp == TINNING_KIT)
         ia_addmenu(win, IA_APPLY_OBJ, 'a', "Use this kit to tin a corpse");
-    else if (otmp->otyp == UPGRADE_KIT)
+    else if (otmp->otyp == RESIZING_KIT)
         ia_addmenu(win, IA_APPLY_OBJ, 'a', "Use this kit to resize an object");
     else if (otmp->otyp == LEASH)
         ia_addmenu(win, IA_APPLY_OBJ, 'a', "Tie a pet to this leash");
@@ -3450,8 +3450,22 @@ itemactions(struct obj *otmp)
 
     /* W: wear armor */
     if (!already_worn) {
-        if (otmp->oclass == ARMOR_CLASS)
-            ia_addmenu(win, IA_WEAR_OBJ, 'W', "Wear this armor");
+        if (otmp->oclass == ARMOR_CLASS) {
+            /* if 'otmp' is worn we skip 'W' (and show 'T' above instead);
+               if it isn't, we either show "W - wear this" if otmp's slot
+               isn't populated, or "W - [already wearing <simple-armor>]";
+               for the latter, picking 'W' will fail but we don't want to
+               omit 'W' in this situation */
+            long Wmask = armcat_to_wornmask(objects[otmp->otyp].oc_armcat);
+            struct obj *o = wearmask_to_obj(Wmask);
+
+            if (!o)
+                Strcpy(buf, "Wear this armor");
+            else
+                Sprintf(buf, "[already wearing %s]", an(armor_simple_name(o)));
+
+            ia_addmenu(win, IA_WEAR_OBJ, 'W', buf);
+        }
     }
 
     /* x: Swap main and readied weapon */

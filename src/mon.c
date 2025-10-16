@@ -318,7 +318,8 @@ m_poisongas_ok(struct monst *mtmp)
 
     /* Non living, non breathing, immune monsters are not concerned */
     if (nonliving(mtmp->data) || is_vampshifter(mtmp)
-        || breathless(mtmp->data) || immune_poisongas(mtmp->data))
+        || breathless(mtmp->data) || immune_poisongas(mtmp->data)
+        || can_magbreathe(mtmp))
         return M_POISONGAS_OK;
     /* not is_swimmer(); assume that non-fish are swimming on
        the surface and breathing the air above it periodically
@@ -1985,13 +1986,14 @@ max_mon_load(struct monst *mtmp)
      */
     if (!mtmp->data->cwt)
         maxload = (MAX_CARR_CAP * (long) mtmp->data->msize) / MZ_HUMAN;
-    else if (!strongmonst(mtmp->data)
-             || (strongmonst(mtmp->data) && (mtmp->data->cwt > WT_HUMAN)))
+    else if (!(strongmonst(mtmp->data) || extra_strength(mtmp))
+             || ((strongmonst(mtmp->data) || extra_strength(mtmp))
+                && (mtmp->data->cwt > WT_HUMAN)))
         maxload = (MAX_CARR_CAP * (long) mtmp->data->cwt) / WT_HUMAN;
     else
         maxload = MAX_CARR_CAP; /*strong monsters w/cwt <= WT_HUMAN*/
 
-    if (!strongmonst(mtmp->data))
+    if (!strongmonst(mtmp->data) && !extra_strength(mtmp))
         maxload /= 2;
 
     if (maxload < 1)

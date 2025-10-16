@@ -82,7 +82,7 @@ enum ms_sounds {
 #define MR2_STRENGTH    0x2000 /* gauntlets of power */
 #define MR2_FUMBLING    0x4000 /* clumsy */
 #define MR2_TELEPATHY   0x4000 /* telepathic */
-#define MR2_JUMPING     0x8000   /* can jump */
+#define MR2_JUMPING     0x8000 /* can jump */
 
 #define M1_FLY          0x00000001L /* can fly or float */
 #define M1_SWIM         0x00000002L /* can traverse water */
@@ -180,6 +180,7 @@ enum ms_sounds {
 #define M3_TRIPPER      0x2000 /* monster can trip the player */
 #define M3_CALLOUT      0x4000 /* monster coordinates with others by calling out player position */
 
+#define MZ_RANDOM      -1 /* used in set_obj_size */
 #define MZ_TINY         0 /* < 2' */
 #define MZ_SMALL        1 /* 2-4' */
 #define MZ_MEDIUM       2 /* 4-7' */

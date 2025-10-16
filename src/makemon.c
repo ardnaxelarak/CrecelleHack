@@ -417,7 +417,10 @@ m_initweap(struct monst *mtmp)
                 break;
             case 2:
                 (void) mongets(mtmp, SLING);
-                m_initthrow(mtmp, !rn2(4) ? FLINT : ROCK, 6);
+                if (svl.level.flags.temperature == -1)
+                    m_initthrow(mtmp, SNOWBALL, 8);
+                else
+                    m_initthrow(mtmp, !rn2(4) ? FLINT : ROCK, 6);
                 break;
             }
             if (!rn2(10))
@@ -2732,14 +2735,16 @@ set_mimic_sym(struct monst *mtmp)
     /* when appearing as an object based on a monster type, pick a shape */
     if (ap_type == M_AP_OBJECT
         && (appear == STATUE || appear == FIGURINE
-            || appear == CORPSE || appear == EGG || appear == TIN)) {
+            || appear == CORPSE || appear == EGG || appear == TIN
+            || appear == POT_BLOOD)) {
         int mndx = rndmonnum(),
             nocorpse_ndx = (svm.mvitals[mndx].mvflags & G_NOCORPSE) != 0;
 
         if (appear == CORPSE && nocorpse_ndx)
             mndx = rn1(PM_WIZARD - PM_ARCHEOLOGIST + 1, PM_ARCHEOLOGIST);
         else if ((appear == EGG && !can_be_hatched(mndx))
-                 || (appear == TIN && nocorpse_ndx))
+                 || (appear == TIN && nocorpse_ndx)
+                 || (appear == POT_BLOOD && !has_blood(&mons[mndx])))
             mndx = NON_PM; /* revert to generic egg or empty tin */
 
         newmcorpsenm(mtmp);

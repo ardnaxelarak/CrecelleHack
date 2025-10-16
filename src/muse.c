@@ -1204,6 +1204,10 @@ use_defensive(struct monst *mtmp)
             mtmp->mhp += d(6, 4); /* inconsistent number, but 4d4 is too small. */
             if (mtmp->mhp > mtmp->mhpmax)
                 mtmp->mhp = ++mtmp->mhpmax;
+            if (mtmp->data == &mons[PM_CRIMSON_DEATH]) {
+                mtmp->perminvis = mtmp->minvis = FALSE;
+                newsym(mtmp->mx, mtmp->my);
+            }
             if (canseemon(mtmp))
                 pline_mon(mtmp, "%s looks better.", Monnam(mtmp));
         }
@@ -2924,7 +2928,8 @@ searches_for_item(struct monst *mon, struct obj *obj)
     case AMULET_CLASS:
         if (typ == AMULET_OF_LIFE_SAVING)
             return (boolean) !(nonliving(mon->data) || is_vampshifter(mon));
-        if (typ == AMULET_OF_REFLECTION || typ == AMULET_OF_GUARDING || typ == AMULET_OF_CHANGE)
+        if (typ == AMULET_OF_REFLECTION || typ == AMULET_OF_GUARDING || typ == AMULET_OF_CHANGE
+            || typ == AMULET_OF_MAGICAL_BREATHING)
             return TRUE;
         break;
     case TOOL_CLASS:
@@ -2942,6 +2947,10 @@ searches_for_item(struct monst *mon, struct obj *obj)
             return (obj->spe > 0);
         if (is_glasses(obj) && typ != LENSES)
             return TRUE;
+        if (typ == OIL_LAMP || typ == BRASS_LANTERN)
+            return (obj->age > 9L);
+        if (typ == MAGIC_LAMP)
+            return TRUE;
         break;
     case FOOD_CLASS:
         if (typ == CORPSE)
@@ -2956,6 +2965,8 @@ searches_for_item(struct monst *mon, struct obj *obj)
         if (typ == EGG && ismnum(obj->corpsenm))
             return (boolean) touch_petrifies(&mons[obj->corpsenm]);
         break;
+    case BOTTLE_CLASS:
+        return TRUE;
     default:
         break;
     }

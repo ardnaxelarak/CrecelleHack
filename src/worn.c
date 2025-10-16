@@ -205,6 +205,70 @@ wearmask_to_obj(long wornmask)
     return (struct obj *) 0;
 }
 
+/* convert an armor wornmask to corresponding category */
+int
+wornmask_to_armcat(long mask)
+{
+    int cat = 0;
+
+    switch (mask & W_ARMOR) {
+    case W_ARM:
+        cat = ARM_SUIT;
+        break;
+    case W_ARMC:
+        cat = ARM_CLOAK;
+        break;
+    case W_ARMH:
+        cat = ARM_HELM;
+        break;
+    case W_ARMS:
+        cat = ARM_SHIELD;
+        break;
+    case W_ARMG:
+        cat = ARM_GLOVES;
+        break;
+    case W_ARMF:
+        cat = ARM_BOOTS;
+        break;
+    case W_ARMU:
+        cat = ARM_SHIRT;
+        break;
+    }
+    return cat;
+}
+
+/* convert an armor category to corresponding wornmask */
+long
+armcat_to_wornmask(int cat)
+{
+    long mask = 0L;
+
+    switch (cat) {
+    case ARM_SUIT:
+        mask = W_ARM;
+        break;
+    case ARM_CLOAK:
+        mask = W_ARMC;
+        break;
+    case ARM_HELM:
+        mask = W_ARMH;
+        break;
+    case ARM_SHIELD:
+        mask = W_ARMS;
+        break;
+    case ARM_GLOVES:
+        mask = W_ARMG;
+        break;
+    case ARM_BOOTS:
+        mask = W_ARMF;
+        break;
+    case ARM_SHIRT:
+        mask = W_ARMU;
+        break;
+    }
+    return mask;
+}
+
 /* return a bitmask of the equipment slot(s) a given item might be worn in */
 long
 wearslot(struct obj *obj)
@@ -562,6 +626,8 @@ update_mon_extrinsics(
             mon->mextrinsics |= (unsigned short) res_to_mr(which);
             break;
         }
+        if (obj->otyp == GAUNTLETS_OF_POWER)
+            mon->mextrinsics |= MR2_STRENGTH;
     } else { /* off */
         switch (which) {
         case INVIS:
@@ -622,6 +688,8 @@ update_mon_extrinsics(
         default:
             break;
         }
+        if (obj->otyp == GAUNTLETS_OF_POWER)
+            mon->mextrinsics &= ~MR2_STRENGTH;
     }
 
     /* worn alchemy smock/apron confers both poison resistance and acid
@@ -777,6 +845,7 @@ m_dowear_type(
                     && obj->otyp != AMULET_OF_REFLECTION
                     && obj->otyp != AMULET_OF_GUARDING
                     && obj->otyp != AMULET_OF_ESP
+                    && obj->otyp != AMULET_OF_MAGICAL_BREATHING
                     && obj->otyp != AMULET_OF_CHANGE))
                 continue;
             /* for 'best' to be non-Null, it must be an amulet of guarding;
@@ -842,7 +911,7 @@ m_dowear_type(
         }
         if (obj->owornmask)
             continue;
-        if (wrong_size_armor(obj, mon->data))
+        if (wrong_size_armor(obj, mon->data) != 0)
             continue;
         /* I'd like to define a VISIBLE_ARM_BONUS which doesn't assume the
          * monster knows obj->spe, but if I did that, a monster would keep
